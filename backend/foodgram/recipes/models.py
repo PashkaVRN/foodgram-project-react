@@ -117,9 +117,6 @@ class Favorite(models.Model):
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
 
-    def __str__(self):
-        return self.name
-
 
 class Buy(models.Model):
     """ Модель списка покупок. """
