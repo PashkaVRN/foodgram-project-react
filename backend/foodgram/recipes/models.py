@@ -3,6 +3,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
 
+from colorfield.fields import ColorField
+
 User = get_user_model()
 
 
@@ -35,9 +37,10 @@ class Tag(models.Model):
         db_index=True,
         unique=True
     )
-    color = models.CharField(
-        max_length=150, verbose_name='Цвет',
-        help_text='Введите цвет в кодировке "HEX"'
+    color = ColorField(
+        'Цвет',
+        format='hex',
+        max_length=7
     )
     slug = models.SlugField(
         max_length=200,
@@ -67,9 +70,8 @@ class Recipe(models.Model):
         max_length=200,
     )
     image = models.ImageField(
-        blank=True,
-        upload_to='recipes/images',
-        verbose_name='Картинка'
+        upload_to='recipes/image/',
+        verbose_name='Изображение'
     )
     description = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(

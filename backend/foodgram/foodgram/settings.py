@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'recipes',
     'api',
     'users',
+    'colorfield',
 ]
 
 MIDDLEWARE = [
