@@ -32,8 +32,6 @@ class RecipeAdmin(admin.ModelAdmin):
             return Favorite.objects.filter(recipe=obj).count()
         return 0
 
-    favorites.short_description = 'Количество добавлений рецепта в избранное'
-
 
 class FavoriteAdmin(admin.ModelAdmin):
     """ Админ панель управление подписками """
