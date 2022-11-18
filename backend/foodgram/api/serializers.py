@@ -151,3 +151,19 @@ class FavoriteSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         return RecipeListSubscribeSerializer(instance.recipe,
                                              context=self.context).data
+
+
+class SubscribeListSerializer(serializers.ModelSerializer):
+    """Сериализатор для получения подписок """
+
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'email', 'username', 'first_name',
+            'last_name', 'is_subscribed', 'recipes',
+            'recipes_count'
+        )
