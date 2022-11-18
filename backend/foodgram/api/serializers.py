@@ -155,7 +155,6 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 class SubscribeListSerializer(serializers.ModelSerializer):
     """Сериализатор для получения подписок """
-
     is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -167,3 +166,12 @@ class SubscribeListSerializer(serializers.ModelSerializer):
             'last_name', 'is_subscribed', 'recipes',
             'recipes_count'
         )
+
+
+class AmountIngredientInRecipeSerializer(serializers.ModelSerializer):
+    """Сериализатор добавления ингредиента с указанием количества в рецепт """
+    id = serializers.IntegerField()
+
+    class Meta:
+        model = IngredientRecipe
+        fields = ('id', 'amount')
