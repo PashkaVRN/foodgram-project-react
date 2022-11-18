@@ -4,3 +4,4 @@ djoser==2.1.0
 django-colorfield==0.7.2
 django-filter==2.4.0
 flake8==4.0.1
+python-dotenv==0.20.0

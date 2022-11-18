@@ -1,12 +1,16 @@
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+#не забыть создать env файл
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-SECRET_KEY = '61d@1%p0d@1h&+j+h480$t@e(*0s6a1r%ohig5$xs^au#on37n'
+SECRET_KEY = os.getenv('TOKEN', 'default-value')
 
-DEBUG = False
+DEBUG = os.getenv('DEBUG', default=False)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [os.getenv('ALLOWED_HOSTS', default='*')]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -19,6 +23,7 @@ INSTALLED_APPS = [
     'api',
     'users',
     'colorfield',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
