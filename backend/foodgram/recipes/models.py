@@ -177,3 +177,12 @@ class IngredientRecipe(models.Model):
         ]
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
+
+
+class TagRecipe(models.Model):
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'Теги'
+        verbose_name_plural = verbose_name
