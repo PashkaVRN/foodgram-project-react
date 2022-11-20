@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'users',
     'colorfield',
     'django_filters',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
