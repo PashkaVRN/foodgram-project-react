@@ -23,7 +23,7 @@ class RecipeAdmin(admin.ModelAdmin):
     """ Админ панель управление рецептами """
     list_display = ('name', 'author', 'favorites')
     search_fields = ('author', 'name')
-    list_filter = ('tags', )
+    list_filter = ('name', 'author', 'tags')
     filter_horizontal = ('tags', )
     empty_value_display = '-пусто-'
 
