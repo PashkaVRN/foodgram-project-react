@@ -21,16 +21,10 @@ class TagAdmin(admin.ModelAdmin):
 
 class RecipeAdmin(admin.ModelAdmin):
     """ Админ панель управление рецептами """
-    list_display = ('name', 'author', 'favorites')
-    search_fields = ('author', 'name')
-    list_filter = ('name', 'author', 'tags')
-    filter_horizontal = ('tags', )
+    list_display = ('author', 'name', 'cooking_time')
+    search_fields = ('name', 'author', 'tags')
+    list_filter = ('author', 'name', 'tags')
     empty_value_display = '-пусто-'
-
-    def favorites(self, obj):
-        if Favorite.objects.filter(recipe=obj).exists():
-            return Favorite.objects.filter(recipe=obj).count()
-        return 0
 
 
 class FavoriteAdmin(admin.ModelAdmin):

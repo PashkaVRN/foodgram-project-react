@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import UniqueConstraint
+from django.core.validators import RegexValidator
 
 from colorfield.fields import ColorField
 
@@ -26,7 +27,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return self.name
+        return f'{self.name}, {self.measurement_unit}'
 
 
 class Tag(models.Model):
@@ -38,9 +39,16 @@ class Tag(models.Model):
         unique=True
     )
     color = ColorField(
-        'Цвет',
+        verbose_name='HEX-код',
         format='hex',
-        max_length=7
+        max_length=7,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$",
+                message='Проверьте вводимый формат',
+            )
+        ],
     )
     slug = models.SlugField(
         max_length=200,
@@ -121,14 +129,16 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
         constraints = [
             UniqueConstraint(
-                fields=('user', 'recipe'),
-                name='user_favorite_unique'
+                fields=['user', 'recipe'], name='unique_favourite'
             )
         ]
-        verbose_name = 'Избранный рецепт'
-        verbose_name_plural = 'Избранные рецепты'
+
+    def __str__(self):
+        return f'{self.user} :: {self.recipe}'
 
 
 class ShoppingCart(models.Model):
@@ -147,8 +157,16 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
-        verbose_name = 'Список покупок'
-        verbose_name_plural = 'Список покупок'
+        verbose_name = 'Корзина'
+        verbose_name_plural = 'Корзина'
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'recipe'], name='unique_shopping_cart'
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} :: {self.recipe}'
 
 
 class IngredientRecipe(models.Model):
@@ -168,21 +186,8 @@ class IngredientRecipe(models.Model):
         verbose_name='Количество ингредиента'
     )
 
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=('recipe', 'ingredient'),
-                name='recipe_ingredient_unique'
-            )
-        ]
-        verbose_name = 'Ингредиент в рецепте'
-        verbose_name_plural = 'Ингредиенты в рецепте'
-
-
-class TagRecipe(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-
-    class Meta:
-        verbose_name = 'Теги'
-        verbose_name_plural = verbose_name
+    def __str__(self):
+        return (
+            f'{self.ingredient.name} :: {self.ingredient.measurement_unit}'
+            f' - {self.amount} '
+        )
