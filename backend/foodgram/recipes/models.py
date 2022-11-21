@@ -1,10 +1,9 @@
+from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 from django.db.models import UniqueConstraint
-from django.core.validators import RegexValidator
-
-from colorfield.fields import ColorField
 
 User = get_user_model()
 

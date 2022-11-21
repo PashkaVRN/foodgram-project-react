@@ -8,7 +8,6 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.fields import IntegerField
 from rest_framework.relations import PrimaryKeyRelatedField
 
-
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
 from users.models import Follow
 
