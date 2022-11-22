@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import IntegerField
+from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
@@ -15,28 +15,24 @@ User = get_user_model()
 
 
 class UserSerializer(UserSerializer):
-    """Сериализатор пользователя"""
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    """ Сериализатор пользователя """
+    is_subscribed = SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
-        fields = (
-            'email', 'id', 'username', 'first_name',
-            'last_name', 'is_subscribed')
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        return all(
-            (request is not None,
-             not request.user.is_anonymous,
-             Follow.objects.filter(
-                 user=request.user, author=obj
-             ).exists())
-        )
+        if self.context.get('request').user.is_anonymous:
+            return False
+        return Follow.objects.filter(
+            user=self.context.get('request').user, author=obj
+        ).exists()
 
 
 class UserCreateSerializer(UserCreateSerializer):
-    """Сериализатор создания пользователя."""
+    """ Сериализатор создания пользователя """
 
     class Meta:
         model = User
@@ -45,20 +41,32 @@ class UserCreateSerializer(UserCreateSerializer):
             'last_name', 'password')
 
 
-class SubscribeListSerializer(serializers.ModelSerializer):
+class SubscribeListSerializer(UserSerializer):
     """ Сериализатор для получения подписок """
-    is_subscribed = serializers.SerializerMethodField()
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
+    recipes_count = SerializerMethodField()
+    recipes = SerializerMethodField()
 
-    class Meta:
-        model = User
-        fields = (
-            'id', 'email', 'username', 'first_name',
-            'last_name', 'is_subscribed', 'recipes',
-            'recipes_count'
-        )
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ('recipes_count', 'recipes')
         read_only_fields = ('email', 'username')
+
+    def validate(self, data):
+        author = self.instance
+        user = self.context.get('request').user
+        if Follow.objects.filter(author=author, user=user).exists():
+            raise ValidationError(
+                detail='Подписка уже существует',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if user == author:
+            raise ValidationError(
+                detail='Нельзя подписаться на самого себя',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
     def get_recipes(self, obj):
         request = self.context.get('request')
@@ -68,24 +76,6 @@ class SubscribeListSerializer(serializers.ModelSerializer):
             recipes = recipes[: int(limit)]
         serializer = RecipeShortSerializer(recipes, many=True, read_only=True)
         return serializer.data
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-    def validate(self, data):
-        author = self.instance
-        user = self.context.get('request').user
-        if Follow.objects.filter(author=author, user=user).exists():
-            raise ValidationError(
-                detail='Подписка на пользователя уже существует',
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        if user == author:
-            raise ValidationError(
-                detail='Нельзя подписываться на самого себя',
-                code=status.HTTP_400_BAD_REQUEST,
-            )
-        return data
 
 
 class TagSerializer(serializers.ModelSerializer):
