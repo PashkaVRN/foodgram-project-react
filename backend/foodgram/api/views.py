@@ -111,17 +111,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 recipe__shopping_cart__user=request.user
             )
             .values(
-                "ingredient__name",
-                "ingredient__measurement_unit",
-                "recipe__image",
+                'ingredient__name',
+                'ingredient__measurement_unit',
+                'recipe__image',
             )
             .annotate(amount=Sum("amount"))
         )
 
         today = datetime.today()
         shopping_list = (
-            f"Список покупок для: {user.get_full_name()}\n\n"
-            "Дата: %s. %s. %s. \n\n" % (today.day, today.month, today.year)
+                f'Список покупок для: {user.get_full_name()}\n\n'
+                'Дата: %s. %s. %s. \n\n' % (today.day, today.month, today.year)
         )
         shopping_list += "\n".join(
             [
@@ -132,9 +132,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ]
         )
 
-        filename = f"{user.username}_shopping_list.txt"
-        response = HttpResponse(shopping_list, content_type="text/plain")
-        response["Content-Disposition"] = f"attachment; filename={filename}"
+        filename = f'{user.username}_shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={filename}'
 
         return response
 
