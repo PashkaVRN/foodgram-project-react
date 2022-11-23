@@ -19,7 +19,7 @@ services:
     env_file:
       - .env
     restart: always
-    container_name: backend
+    container_name: foodgram_backend
 
   frontend:
     build:
