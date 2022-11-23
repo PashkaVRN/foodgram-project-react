@@ -5,7 +5,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
-from rest_framework.fields import IntegerField, SerializerMethodField
+from rest_framework.fields import SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 
 from recipes.models import Ingredient, IngredientRecipe, Recipe, Tag
@@ -129,42 +129,48 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     """ Сериализатор связи ингридиентов и рецепта"""
-    id = IntegerField(write_only=True)
+    id = serializers.ReadOnlyField(source='ingredient.id')
+    name = serializers.ReadOnlyField(source='ingredient.name')
+    measurement_unit = serializers.ReadOnlyField(
+        source='ingredient.measurement_unit'
+    )
 
     class Meta:
         model = IngredientRecipe
-        fields = ('id', 'amount')
+        fields = ('id', 'name', 'measurement_unit', 'amount',)
+        validators = serializers.UniqueTogetherValidator(
+            queryset=IngredientRecipe.objects.all(),
+            fields=('recipe', 'ingredient')
+        )
 
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор создания, редактирования рецепта """
+    tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     author = UserSerializer(read_only=True)
     ingredients = IngredientRecipeSerializer(many=True)
-    tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True)
     image = Base64ImageField()
 
     class Meta:
         model = Recipe
-        fields = ('id', 'author', 'ingredients', 'tags',
-                  'image', 'name', 'text', 'cooking_time'
-                  )
+        fields = (
+            'id', 'tags', 'author', 'ingredients',
+            'name', 'image', 'text', 'cooking_time',
+        )
 
     def validate_ingredients(self, value):
         ingredients = value
         if not ingredients:
             raise ValidationError(
-                {'ingredients': 'Нужен хотя бы один ингредиент'}
+                {'ingredients': 'Необходимо выбрать ингридиенты'}
             )
         ingredients_list = []
         for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item.get('id'))
-            if ingredient in ingredients_list:
-                raise ValidationError(
-                    {'ingredients': 'Ингридиенты не могут повторяться'}
-                )
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
             if int(item['amount']) <= 0:
                 raise ValidationError(
-                    {'amount': 'Количество ингредиента должно быть больше 0'}
+                    {
+                        'amount': 'Количество ингредиентов не может быть 0'}
                 )
             ingredients_list.append(ingredient)
         return value
@@ -172,13 +178,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def validate_tags(self, value):
         tags = value
         if not tags:
-            raise ValidationError(
-                {'tags': 'Нужно выбрать как минимум один тег'}
-            )
+            raise ValidationError({'tags': 'Должен быть выбран тег'})
         tags_list = []
         for tag in tags:
-            if tag in tags_list:
-                raise ValidationError({'tags': 'Теги не могут повторяться'})
             tags_list.append(tag)
         return value
 
@@ -187,7 +189,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         IngredientRecipe.objects.bulk_create(
             [
                 IngredientRecipe(
-                    ingredient=Ingredient.objects.get(id=ingredient.get('id')),
+                    ingredient=Ingredient.objects.get(id=ingredient['id']),
                     recipe=recipe,
                     amount=ingredient['amount'],
                 )

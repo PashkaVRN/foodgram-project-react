@@ -86,7 +86,7 @@ class Recipe(models.Model):
         upload_to='recipes/image/',
         verbose_name='Изображение'
     )
-    description = models.TextField(verbose_name='Описание')
+    text = models.TextField(verbose_name='Описание')
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингридиенты',
