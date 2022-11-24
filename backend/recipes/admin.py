@@ -1,6 +1,19 @@
 from django.contrib import admin
 
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
+from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, IngredientRecipe
+
+
+class IngredientInline(admin.TabularInline):
+    model = IngredientRecipe
+    extra = 3
+
+
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('author', 'name', 'cooking_time')
+    search_fields = ('name', 'author', 'tags')
+    list_filter = ('author', 'name', 'tags')
+    inlines = (IngredientInline,)
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -19,12 +32,12 @@ class TagAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
 
-class RecipeAdmin(admin.ModelAdmin):
-    """ Админ панель управление рецептами """
-    list_display = ('author', 'name', 'cooking_time')
-    search_fields = ('name', 'author', 'tags')
-    list_filter = ('author', 'name', 'tags')
-    empty_value_display = '-пусто-'
+# class RecipeAdmin(admin.ModelAdmin):
+#     """ Админ панель управление рецептами """
+#     list_display = ('author', 'name', 'cooking_time')
+#     search_fields = ('name', 'author', 'tags')
+#     list_filter = ('author', 'name', 'tags')
+#     empty_value_display = '-пусто-'
 
 
 class FavoriteAdmin(admin.ModelAdmin):
@@ -46,5 +59,4 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 admin.site.register(ShoppingCart, ShoppingCartAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag, TagAdmin)
-admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
