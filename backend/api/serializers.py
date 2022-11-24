@@ -123,7 +123,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             raise ValidationError('Ингредиенты не добавлены!')
         for ingredient in value:
             id = ingredient['id']
-            if not Ingredient.objects.filter(id=id):
+            if not Ingredient.objects.filter(id=id).exists():
                 raise ValidationError(
                     'Ингридиента нет в базе!'
                 )
@@ -132,7 +132,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                     'Такой ингредиент уже добавлен!'
                 )
             ingredients_list.append(id)
-        return
+        return value
 
     def validate_tags(self, value):
         tags = value
