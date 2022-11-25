@@ -8,6 +8,9 @@ services:
     env_file:
       - .env
     restart: always
+    ports:
+      - "5432:5432"
+
 
   backend:
     build: ../backend 
