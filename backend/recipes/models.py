@@ -172,7 +172,7 @@ class IngredientRecipe(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиенты'
+        verbose_name='Ингредиент'
     )
     recipe = models.ForeignKey(
         Recipe,
@@ -188,12 +188,6 @@ class IngredientRecipe(models.Model):
         ordering = ('-id', )
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты рецепта'
-        constraints = (
-            models.UniqueConstraint(
-                fields=('ingredient', 'recipe'),
-                name='unique_ingredients_recipe'
-            ),
-        )
 
     def __str__(self):
         return (

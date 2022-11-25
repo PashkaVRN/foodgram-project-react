@@ -48,8 +48,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATH'):
-            return RecipeReadSerializer
-        return CreateRecipeSerializer
+            return CreateRecipeSerializer
+        return RecipeReadSerializer
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -83,11 +83,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
         request.data['author'] = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        ingredients = serializer.validated_data.pop('ingredients')
+        ingredients = serializer.validated_data.pop('ingredient')
         instance = serializer.save(author=request.user)
         for ing in ingredients:
             IngredientRecipe.objects.bulk_create([IngredientRecipe(
-                ingredients=ing['ingredients'],
+                ingredients=ing['ingredient'],
                 recipes=instance,
                 amount=ing['amount'])])
         return Response(serializer.data, status=status.HTTP_201_CREATED)
