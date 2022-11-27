@@ -91,7 +91,9 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     """ Сериализатор связи ингридиентов и рецепта """
-    id = serializers.ReadOnlyField(source='ingredient.id')
+    id = serializers.PrimaryKeyRelatedField(
+        queryset=Ingredient.objects.all
+    )
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
         source='ingredient.measurement_unit'
@@ -141,21 +143,84 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
     """ Сериализатор для создания рецепта """
-    ingredients = IngredientRecipeSerializer(many=True)
+    ingredients = IngredientRecipeSerializer(
+        many=True,
+        source='ingredienttorecipe')
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all()
     )
     image = Base64ImageField(max_length=None)
+    author = UserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
-        fields = ('ingredients', 'tags', 'image',
-                  'name', 'text', 'cooking_time',
-                  )
+        fields = (
+            'id', 'tags', 'author', 'ingredients',
+            'is_favorited', 'is_in_shopping_cart',
+            'name', 'image', 'text', 'cooking_time', )
 
-    def to_representation(self, instance):
-        return RecipeReadSerializer(
-            instance,
-            context={'request': self.context.get('request')}
-        ).data
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request', None)
+        if request:
+            current_user = request.user
+        if ShoppingCart.objects.filter(
+            user=current_user.id,
+            recipe=obj.id,
+        ).exists():
+            return True
+        return False
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request', None)
+        if request:
+            current_user = request.user
+        if Favorite.objects.filter(
+            user=current_user.id,
+            recipe=obj.id
+        ).exists():
+            return True
+        return False
+
+    def validate(self, data):
+        request = self.context.get('request', None)
+        if request.method == 'POST':
+            if 'tags' in data:
+                tags = data['tags']
+                for tag in tags:
+                    if not Tag.objects.filter(id=tag.id).first():
+                        raise serializers.ValidationError(
+                            'Указанного тега не существует')
+            if 'ingredients' in data:
+                ingredients = data['ingredients']
+                for ingredient in ingredients:
+                    print(ingredient)
+                    ingredient = ingredient['id']
+                    if not Ingredient.objects.filter(
+                        id=ingredient.id
+                    ).first():
+                        raise serializers.ValidationError(
+                            'Указанного ингредиента не существует')
+        return data
+
+    def create(self, validated_data):
+        request = self.context.get('request', None)
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredienttorecipe')
+        current_user = request.user
+        recipe = Recipe.objects.create(author=current_user, **validated_data)
+        for tag in tags:
+            recipe.tags.add(tag)
+        for ingredient_data in ingredients:
+            print(ingredient_data)
+            ingredient = ingredient_data.pop('id')
+            amount = ingredient_data.pop('amount')
+            ingredient = Ingredient.objects.get(id=ingredient.id)
+            IngredientRecipe.objects.create(
+                ingredient=ingredient,
+                amount=amount,
+                recipe=recipe
+            )
+        return recipe
