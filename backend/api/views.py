@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
-from .permissions import IsAdminOrReadOnly, IsAuthorModeratorAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, AuthorPermission
 from recipes.models import (Ingredient, Recipe,
                             Tag)
 from .serializers import (CreateRecipeSerializer, IngredientSerializer,
@@ -40,7 +40,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ Вывод работы с рецептами """
     queryset = Recipe.objects.all()
     serializer_class = CreateRecipeSerializer
-    permission_classes = (IsAuthorModeratorAdminOrReadOnly,)
+    permission_classes = (AuthorPermission,)
     pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
