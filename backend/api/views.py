@@ -12,9 +12,8 @@ from .permissions import IsAdminOrReadOnly, IsAuthorModeratorAdminOrReadOnly
 from recipes.models import (Ingredient, Recipe,
                             Tag)
 from .serializers import (CreateRecipeSerializer, IngredientSerializer,
-                          RecipeReadSerializer,
-                          SubscribeListSerializer, TagSerializer,
-                          UserSerializer)
+                          RecipeReadSerializer, SubscribeListSerializer,
+                          TagSerializer, UserSerializer)
 from users.models import Follow, User
 
 
@@ -46,8 +45,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PATH',):
+        if self.request.method == 'GET':
             return RecipeReadSerializer
         return CreateRecipeSerializer
 
