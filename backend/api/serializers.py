@@ -92,7 +92,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     """ Сериализатор связи ингридиентов и рецепта """
     id = serializers.PrimaryKeyRelatedField(
-        queryset=Ingredient.objects.all
+        queryset=Ingredient.objects.all()
     )
     name = serializers.ReadOnlyField(source='ingredient.name')
     measurement_unit = serializers.ReadOnlyField(
@@ -115,6 +115,13 @@ class RecipeReadSerializer(serializers.ModelSerializer):
     is_in_shopping_cart = serializers.SerializerMethodField()
     image = Base64ImageField(max_length=None)
 
+    class Meta:
+        model = Recipe
+        fields = ('id', 'tags', 'author', 'ingredients',
+                  'is_favorited', 'is_in_shopping_cart',
+                  'name', 'image', 'text', 'cooking_time'
+                  )
+
     def get_ingredients(self, obj):
         ingredients = IngredientRecipe.objects.filter(recipe=obj)
         return IngredientRecipeSerializer(ingredients, many=True).data
@@ -132,13 +139,6 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             return False
         user = request.user
         return ShoppingCart.objects.filter(recipe=obj, user=user).exists()
-
-    class Meta:
-        model = Recipe
-        fields = ('id', 'tags', 'author', 'ingredients',
-                  'is_favorited', 'is_in_shopping_cart',
-                  'name', 'image', 'text', 'cooking_time'
-                  )
 
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
@@ -223,23 +223,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             )
         return recipe
 
-    # def update(self, instance, validated_data):
-    #     ingredients = validated_data.pop('ingredienttorecipe')
-    #     tags = validated_data.pop('tags')
-    #     instance = super().update(instance, validated_data)
-    #     instance.tags.clear()
-    #     instance.tags.set(tags)
-    #     instance.ingredients.clear()
-    #     self.create_ingredients_amounts(recipe=instance,
-    #                                     ingredients=ingredients)
-    #     instance.save()
-    #     return instance
-
-    def to_representation(self, instance):
-        request = self.context.get('request')
-        context = {'request': request}
-        return RecipeReadSerializer(instance,
-                                    context=context).data
+    def to_representation(self, recipe):
+        return RecipeReadSerializer(recipe, context=self.context).data
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
