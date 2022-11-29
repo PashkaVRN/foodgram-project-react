@@ -5,14 +5,18 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db.models import Sum
+from django.http import HttpResponse
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, AuthorPermission
-from recipes.models import (Ingredient, Recipe, Tag, Favorite)
+from recipes.models import (Ingredient, Recipe, Tag, Favorite, ShoppingCart,
+                            IngredientRecipe)
 from .serializers import (CreateRecipeSerializer, IngredientSerializer,
                           RecipeReadSerializer, SubscribeListSerializer,
-                          TagSerializer, UserSerializer, FavoriteSerializer)
+                          TagSerializer, UserSerializer, FavoriteSerializer,
+                          ShoppingCartSerializer)
 from users.models import Follow, User
 
 
@@ -48,6 +52,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
         if self.request.method == 'GET':
             return RecipeReadSerializer
         return CreateRecipeSerializer
+
+    @action(detail=False, methods=['GET'])
+    def download_shopping_cart(self, request):
+        """Метод для скачивания списка покупок."""
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_cart__user=request.user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(sum=Sum('amount'))
+        shopping_list = "Купить в магазине:"
+        for ingredient in ingredients:
+            shopping_list += (
+                f"\n{ingredient['ingredient__name']} "
+                f"({ingredient['ingredient__measurement_unit']}) - "
+                f"{ingredient['sum']}")
+        file = 'shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
+        return response
 
 
 class UserViewSet(UserViewSet):
@@ -117,5 +140,35 @@ class FavoriteViewSet(viewsets.ModelViewSet):
         Favorite.objects.filter(
             user=request.user.id,
             recipe=favorite
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class ShoppingCartViewSet(viewsets.ModelViewSet):
+    """ Вывод списка покупок """
+    permission_classes = (IsAuthenticated, )
+    queryset = ShoppingCart.objects.all()
+    serializer_class = ShoppingCartSerializer
+    pagination_class = None
+
+    def create(self, request, *args, **kwargs):
+        data_my = {
+            'user': request.user.id,
+            'recipe': kwargs.get('id')
+
+        }
+        serializer = self.get_serializer(data=data_my)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(serializer.validated_data)
+
+    def destroy(self, request, *args, **kwargs):
+        recipe = kwargs.get('id')
+        ShoppingCart.objects.filter(
+            user=request.user.id,
+            recipe=recipe
         ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
