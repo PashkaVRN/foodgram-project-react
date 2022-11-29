@@ -9,11 +9,10 @@ from rest_framework.response import Response
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import IsAdminOrReadOnly, AuthorPermission
-from recipes.models import (Ingredient, Recipe,
-                            Tag)
+from recipes.models import (Ingredient, Recipe, Tag, Favorite)
 from .serializers import (CreateRecipeSerializer, IngredientSerializer,
                           RecipeReadSerializer, SubscribeListSerializer,
-                          TagSerializer, UserSerializer)
+                          TagSerializer, UserSerializer, FavoriteSerializer)
 from users.models import Follow, User
 
 
@@ -40,9 +39,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ Вывод работы с рецептами """
     queryset = Recipe.objects.all()
     serializer_class = CreateRecipeSerializer
-    permission_classes = (AuthorPermission,)
+    permission_classes = (AuthorPermission, )
     pagination_class = CustomPagination
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):
@@ -90,3 +89,33 @@ class UserViewSet(UserViewSet):
             pages, many=True, context={'request': request}
         )
         return self.get_paginated_response(serializer.data)
+
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    """ Вывод избранных рецептов  """
+    permission_classes = (IsAuthenticated, )
+    queryset = Favorite.objects.all()
+    serializer_class = FavoriteSerializer
+    pagination_class = None
+
+    def create(self, request, *args, **kwargs):
+        data_my = {
+            'user': request.user.id,
+            'recipe': kwargs.get('id')
+
+        }
+        serializer = self.get_serializer(data=data_my)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def perform_create(self, serializer, *args, **kwargs):
+        serializer.save(serializer.validated_data)
+
+    def destroy(self, request, *args, **kwargs):
+        favorite = kwargs.get('id')
+        Favorite.objects.filter(
+            user=request.user.id,
+            recipe=favorite
+        ).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

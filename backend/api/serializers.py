@@ -250,9 +250,21 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-    """ Сериализатор отображения избранного """
-    image = Base64ImageField()
+    """Сериализатор полей избранных рецептов и покупок"""
 
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """  Сериализатор избранных рецептов """
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe',)
+
+    def to_representation(self, instance):
+        return RecipeShortSerializer(
+            instance.recipe,
+            context={'request': self.context.get('request')}
+        ).data

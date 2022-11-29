@@ -129,11 +129,6 @@ class Favorite(models.Model):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
-        constraints = [
-            UniqueConstraint(
-                fields=['user', 'recipe'], name='unique_favourite'
-            )
-        ]
 
     def __str__(self):
         return f'{self.user} :: {self.recipe}'
