@@ -214,7 +214,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
-    """Сериализатор полей избранных рецептов и покупок"""
+    """ Сериализатор полей избранных рецептов и покупок """
 
     class Meta:
         model = Recipe
@@ -236,7 +236,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
 
 class ShoppingCartSerializer(serializers.ModelSerializer):
-    """Сериализатор для списка покупок."""
+    """Сериализатор для списка покупок """
 
     class Meta:
         model = ShoppingCart

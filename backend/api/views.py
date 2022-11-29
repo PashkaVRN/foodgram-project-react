@@ -55,13 +55,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
-        """Метод для скачивания списка покупок."""
         ingredients = IngredientRecipe.objects.filter(
             recipe__shopping_cart__user=request.user
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(sum=Sum('amount'))
-        shopping_list = "Купить в магазине:"
+        shopping_list = 'Купить:'
         for ingredient in ingredients:
             shopping_list += (
                 f"\n{ingredient['ingredient__name']} "
