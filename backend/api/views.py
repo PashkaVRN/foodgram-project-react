@@ -1,23 +1,24 @@
+from django.db.models import Sum
+from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from django.db.models import Sum
-from django.http import HttpResponse
+from users.models import Follow, User
+
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
-from .permissions import IsAdminOrReadOnly, AuthorPermission
-from recipes.models import (Ingredient, Recipe, Tag, Favorite, ShoppingCart,
-                            IngredientRecipe)
-from .serializers import (CreateRecipeSerializer, IngredientSerializer,
-                          RecipeReadSerializer, SubscribeListSerializer,
-                          TagSerializer, UserSerializer, FavoriteSerializer,
-                          ShoppingCartSerializer)
-from users.models import Follow, User
+from .permissions import AuthorPermission, IsAdminOrReadOnly
+from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
+                          IngredientSerializer, RecipeReadSerializer,
+                          ShoppingCartSerializer, SubscribeListSerializer,
+                          TagSerializer, UserSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -48,38 +49,27 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, )
     filterset_class = RecipeFilter
 
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
     def get_serializer_class(self):
         if self.request.method == 'GET':
             return RecipeReadSerializer
         return CreateRecipeSerializer
 
-    @action(detail=False, permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['GET'])
     def download_shopping_cart(self, request):
-        user = request.user
-        ingredients = (
-            IngredientRecipe.objects.filter(
-                recipe__shopping_cart__user=request.user
-            )
-            .values(
-                'ingredient__name',
-                'ingredient__measurement_unit',
-            )
-            .annotate(amount=Sum('amount')).order_by()
-        )
-        shopping_list = (
-            [
-                f'- {ingredient["ingredient__name"]}: '
-                f' {ingredient["amount"]}'
-                f' {ingredient["ingredient__measurement_unit"]}.'
-                for ingredient in ingredients
-            ]
-        )
-        filename = f'{user}_shopping_list.txt'
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__shopping_list__user=request.user
+        ).values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount'))
+        shopping_list = "Купить в магазине:"
+        for ingredient in ingredients:
+            shopping_list += (
+                f"\n{ingredient['ingredient__name']} "
+                f"({ingredient['ingredient__measurement_unit']}) - "
+                f"{ingredient['amount']}")
+        file = 'shopping_list.txt'
         response = HttpResponse(shopping_list, content_type='text/plain')
-        response['Content-Disposition'] = f'attachment; filename={filename}'
+        response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
         return response
 
 
