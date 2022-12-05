@@ -1,19 +1,27 @@
 from django.contrib import admin
 
-from .models import Favorite, Ingredient, Recipe, ShoppingCart, Tag, IngredientRecipe
+from .models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                     ShoppingCart, Tag)
 
 
 class IngredientInline(admin.TabularInline):
     model = IngredientRecipe
     extra = 3
+    min_num = 1
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name', 'cooking_time')
+    list_display = ('author', 'name', 'cooking_time', 'favorites')
     search_fields = ('name', 'author', 'tags')
     list_filter = ('author', 'name', 'tags')
     inlines = (IngredientInline,)
+    empty_value_display = '-пусто-'
+
+    def favorites(self, obj):
+        if Favorite.objects.filter(recipe=obj).exists():
+            return Favorite.objects.filter(recipe=obj).count()
+        return 0
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -30,14 +38,6 @@ class TagAdmin(admin.ModelAdmin):
     search_fields = ('name', 'slug')
     list_filter = ('name', )
     empty_value_display = '-пусто-'
-
-
-# class RecipeAdmin(admin.ModelAdmin):
-#     """ Админ панель управление рецептами """
-#     list_display = ('author', 'name', 'cooking_time')
-#     search_fields = ('name', 'author', 'tags')
-#     list_filter = ('author', 'name', 'tags')
-#     empty_value_display = '-пусто-'
 
 
 class FavoriteAdmin(admin.ModelAdmin):

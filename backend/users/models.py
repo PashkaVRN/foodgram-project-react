@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
-from django.db.models import UniqueConstraint
+from django.db.models import F, Q, UniqueConstraint
+from foodgram import settings
 
 
 class User(AbstractUser):
@@ -10,20 +11,20 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name', )
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=150
+        max_length=settings.LENGTH_OF_FIELDS_USER_1
     )
     last_name = models.CharField(
-        max_length=150,
+        max_length=settings.LENGTH_OF_FIELDS_USER_1,
         verbose_name='Фамилия',
     )
     email = models.EmailField(
-        max_length=254,
+        max_length=settings.LENGTH_OF_FIELDS_USER_1,
         verbose_name='email',
         unique=True
     )
     username = models.CharField(
         verbose_name='username',
-        max_length=150,
+        max_length=settings.LENGTH_OF_FIELDS_USER_2,
         unique=True,
         validators=(UnicodeUsernameValidator(), )
     )
@@ -58,6 +59,10 @@ class Follow(models.Model):
             UniqueConstraint(
                 fields=('user', 'author'),
                 name='unique_follow'
+            ),
+            models.CheckConstraint(
+                check=~Q(user=F('author')),
+                name='no_self_follow'
             )
         ]
         verbose_name = 'Подписка'
