@@ -45,9 +45,9 @@ class SubscribeListSerializer(UserSerializer):
         read_only_fields = ('email', 'username', 'first_name', 'last_name')
 
     def validate(self, data):
-        author = self.instance
+        author = data.instance
         user = self.context.get('request').user
-        if user.follower.filter(user=user, author=author).exists():
+        if user.follower.filter(author=author).exists():
             raise ValidationError(
                 detail='Подписка уже существует',
                 code=status.HTTP_400_BAD_REQUEST,
@@ -127,15 +127,15 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
+        if not request or request.user.is_anonymous:
             return False
-        return obj.favorites.filter(recipe=obj, user=request.user).exists()
+        return obj.favorites.filter(user=request.user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
+        if not request or request.user.is_anonymous:
             return False
-        return obj.shopping_list.filter(recipe=obj, user=request.user).exists()
+        return obj.shopping_list.filter(user=request.user).exists()
 
 
 class CreateRecipeSerializer(serializers.ModelSerializer):
@@ -208,14 +208,11 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         return recipe
 
     def update(self, instance, validated_data):
-        request = self.context.get('request', None)
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredienttorecipe')
-        recipe = Recipe.objects.create(author=request.user, **validated_data)
         instance.tags.clear()
-        recipe.tags.set(tags)
-        instance.ingredients.clear()
-        self.create_ingredients(recipe, ingredients)
+        IngredientRecipe.objects.filter(recipe=instance).delete()
+        instance.tags.set(validated_data.pop('tags'))
+        ingredients = validated_data.pop('ingredients')
+        self.create_ingredients(ingredients, instance)
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
@@ -240,8 +237,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe',)
 
     def validate(self, data):
-        if Favorite.objects.filter(user=data['user'],
-                                   recipe=data['recipe']).exists():
+        recipe = data['recipe']
+        if recipe.favorites.filter(recipe=data['recipe']).exists():
             raise serializers.ValidationError(
                 'Рецепт уже добавлен в избранное.'
             )
@@ -262,10 +259,11 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe',)
 
     def validate(self, data):
-        if Favorite.objects.filter(user=data['user'],
-                                   recipe=data['recipe']).exists():
+        recipe = data['recipe']
+        print(recipe)
+        if recipe.shopping_list.filter(recipe=data['recipe']).exists():
             raise serializers.ValidationError(
-                'Рецепт уже добавлен в корзину.'
+                'Рецепт уже добавлен в покупки.'
             )
         return data
 

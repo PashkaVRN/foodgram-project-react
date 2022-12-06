@@ -19,9 +19,7 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
     def favorites(self, obj):
-        if Favorite.objects.filter(recipe=obj).exists():
-            return Favorite.objects.filter(recipe=obj).count()
-        return 0
+        return obj.favorites.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):

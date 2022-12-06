@@ -1,10 +1,10 @@
 from colorfield.fields import ColorField
+from django.conf import settings
 from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
-from foodgram import settings
-from users.models import User
 from django.db.models import UniqueConstraint
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -130,9 +130,6 @@ class FavoriteShoppingCart(models.Model):
         verbose_name='Рецепт',
     )
 
-    def __str__(self):
-        return f'{self.user} :: {self.recipe}'
-
     class Meta:
         abstract = True
         constraints = [
@@ -141,6 +138,9 @@ class FavoriteShoppingCart(models.Model):
                 name='uniquee_user_recipe_%(class)s'
             )
         ]
+
+    def __str__(self):
+        return f'{self.user} :: {self.recipe}'
 
 
 class Favorite(FavoriteShoppingCart):
