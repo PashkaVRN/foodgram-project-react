@@ -266,7 +266,7 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         user = data['user']
         if user.shopping_list.filter(recipe=data['recipe']).exists():
             raise serializers.ValidationError(
-                'Рецепт уже добавлен в избранное.'
+                'Рецепт уже добавлен в корзину'
             )
         return data
 
