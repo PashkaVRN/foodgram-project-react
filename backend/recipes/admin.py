@@ -12,14 +12,20 @@ class IngredientInline(admin.TabularInline):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ('author', 'name', 'cooking_time', 'favorites')
+    list_display = ('author', 'name', 'cooking_time',
+                    'get_favorites', 'get_ingredients',)
     search_fields = ('name', 'author', 'tags')
     list_filter = ('author', 'name', 'tags')
     inlines = (IngredientInline,)
     empty_value_display = '-пусто-'
 
-    def favorites(self, obj):
+    def get_favorites(self, obj):
         return obj.favorites.count()
+    get_favorites.short_description = 'Избранное'
+
+    def get_ingredients(self, obj):
+        return "\n".join([i[0] for i in obj.ingredients.values_list('name')])
+    get_ingredients.short_description = 'Ингридиенты'
 
 
 class IngredientAdmin(admin.ModelAdmin):
