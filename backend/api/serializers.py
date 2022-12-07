@@ -263,10 +263,10 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
         fields = ('user', 'recipe',)
 
     def validate(self, data):
-        recipe = data['recipe']
-        if recipe.shopping_list.filter(recipe=data['user']).exists():
+        user = data['user']
+        if user.shopping_list.filter(recipe=data['recipe']).exists():
             raise serializers.ValidationError(
-                'Рецепт уже добавлен в покупки.'
+                'Рецепт уже добавлен в избранное.'
             )
         return data
 
