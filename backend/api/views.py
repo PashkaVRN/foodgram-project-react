@@ -80,7 +80,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         methods=('POST',),
         permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, pk):
-        context = {"request": request}
+        context = {'request': request}
         recipe = get_object_or_404(Recipe, id=pk)
         data = {
             'user': request.user.id,
