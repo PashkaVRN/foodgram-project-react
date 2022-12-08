@@ -5,20 +5,21 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import (IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
+
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
+from users.models import Follow, User
 
 from .filters import IngredientFilter, RecipeFilter
 from .pagination import CustomPagination
 from .permissions import AuthorPermission
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
 from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
                           IngredientSerializer, RecipeReadSerializer,
-                          SubscribeListSerializer, ShoppingCartSerializer,
-                          TagSerializer, UserSerializer,)
-from users.models import Follow, User
+                          ShoppingCartSerializer, SubscribeListSerializer,
+                          TagSerializer, UserSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
@@ -97,7 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart,
             user=request.user.id,
             recipe=get_object_or_404(Recipe, id=pk)
-            ).delete()
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
@@ -122,7 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorite,
             user=request.user,
             recipe=get_object_or_404(Recipe, id=pk)
-            ).delete()
+        ).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -149,10 +150,9 @@ class UserViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            subscription = get_object_or_404(
+            get_object_or_404(
                 Follow, user=user, author=author
-            )
-            subscription.delete()
+            ).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, permission_classes=[IsAuthenticated])

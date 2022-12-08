@@ -2,11 +2,11 @@ from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers, status
-from rest_framework.fields import SerializerMethodField
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SerializerMethodField
 
-from recipes.models import (Ingredient, IngredientRecipe, Recipe, Tag,
-                            ShoppingCart, Favorite)
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
 from users.models import User
 
 
@@ -145,7 +145,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     """ Сериализатор для создания рецепта """
     ingredients = IngredientRecipeSerializer(
         many=True,
-        )
+    )
     tags = serializers.PrimaryKeyRelatedField(
         many=True,
         queryset=Tag.objects.all(),
@@ -221,8 +221,8 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         return RecipeReadSerializer(instance, context={
-                 'request': self.context.get('request')
-            }).data
+            'request': self.context.get('request')
+        }).data
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
