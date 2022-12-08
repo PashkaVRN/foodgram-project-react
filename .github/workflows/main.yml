@@ -26,27 +26,32 @@ jobs:
       run: |
         python -m flake8
         
-  # build_and_push_to_docker_hub:
-  #   name: Push Docker image to Docker Hub
-  #   runs-on: ubuntu-latest
-  #   needs: tests
-  #   steps:
-  #     - name: Check out the repo
-  #       uses: actions/checkout@v2
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v1
-  #     - name: Login to Docker
-  #       uses: docker/login-action@v1
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-  #     - name: Push to Docker Hub
-  #       uses: docker/build-push-action@v2
-  #       with:
-  #         context: ./api_yamdb/
-  #         file: api_yamdb/Dockerfile
-  #         push: true
-  #         tags: ${{ secrets.DOCKER_USERNAME }}/none:latest
+  build_and_push_to_docker_hub:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to Docker
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push backend to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: backend/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_backend:latest
+      - name: Push frontend to Docker Hub
+        uses: docker/build-push-action@v2
+        with:
+          context: frontend/
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/foodgram_frontend:latest
 
   # deploy:
   #   runs-on: ubuntu-latest
