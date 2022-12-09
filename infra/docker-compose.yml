@@ -28,6 +28,7 @@ services:
       - db
     container_name: foodgram_frontend
 
+
   nginx:
     image: nginx:1.19.3
     ports:
