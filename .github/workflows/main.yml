@@ -65,7 +65,9 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
+            cd infra/
             sudo docker-compose stop
+            sudo docker-compose rm web
             sudo docker pull pashkavrn/foodgram_frontend:latest
             sudo docker pull pashkavrn/foodgram_backend:latest
             touch .env
