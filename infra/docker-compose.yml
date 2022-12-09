@@ -9,7 +9,7 @@ services:
       - .env
 
   backend:
-    image: ../backend 
+    image: pashkavrn/foodgram_backend
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
@@ -22,7 +22,7 @@ services:
 
   frontend:
     image:
-      context: ../frontend
+      context: pashkavrn/foodgram_frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
