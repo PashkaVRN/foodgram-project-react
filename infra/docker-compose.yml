@@ -22,7 +22,6 @@ services:
 
   frontend:
     image: pashkavrn/foodgram_frontend
-      dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
     depends_on:
