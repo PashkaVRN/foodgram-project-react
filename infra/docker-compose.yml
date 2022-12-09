@@ -9,7 +9,7 @@ services:
       - .env
 
   backend:
-    build: ../backend 
+    image: ../backend 
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
@@ -21,7 +21,7 @@ services:
     container_name: foodgram_backend
 
   frontend:
-    build:
+    image:
       context: ../frontend
       dockerfile: Dockerfile
     volumes:
