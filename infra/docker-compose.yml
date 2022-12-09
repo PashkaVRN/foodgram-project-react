@@ -21,8 +21,7 @@ services:
     container_name: foodgram_backend
 
   frontend:
-    image:
-      context: pashkavrn/foodgram_frontend
+    image: pashkavrn/foodgram_frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
