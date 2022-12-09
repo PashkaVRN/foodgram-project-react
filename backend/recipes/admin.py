@@ -24,7 +24,7 @@ class RecipeAdmin(admin.ModelAdmin):
     get_favorites.short_description = 'Избранное'
 
     def get_ingredients(self, obj):
-        return ','.join([
+        return ', '.join([
             ingredients.name for ingredients
             in obj.ingredients.all()])
     get_ingredients.short_description = 'Ингридиенты'
